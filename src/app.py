@@ -12,18 +12,18 @@ features = joblib.load("models/feature_list.pkl")
 client = genai.Client(api_key=os.getenv("GENAI_API_KEY"))
 
 st.title("AI Diabetes Risk Prediction System")
-st.write("Enter your health parameters to determine diabetes risk.")
+st.write("Enter your health parameters to determine diabetes risk.(0-No,1-Yes)")
 
-# Only show main 5 features
+# Only show main 5 features which were calculated in the notebook
 BMI = st.number_input("BMI", min_value=10.0, max_value=50.0, value=25.0, step=0.1)
-Age = st.slider("Age Group (1(18-24yrs),...,13(80+yrs))", 1, 13)
+Age = st.slider("Age Groups (1(18-24yrs),2(25-29yrs),3(30-34yrs),4(35-39yrs),5(40-44yrs),6(45-49yrs),7(50-54yrs),8(55-59yrs),9(60-64yrs),10(65-69yrs),11(70-74yrs),12(75-79yrs),13(80+yrs))", 1, 13)
 HighBP = st.selectbox("High Blood Pressure", [0,1])
 HighChol = st.selectbox("High Cholesterol", [0,1])
 PhysActivity = st.selectbox("Physical Activity", [0,1])
 
 
 if st.button("Predict Diabetes Risk"):
-    # Set default values for all other features
+    #setting defalt values for the other features which we are not consideribg for the input ui part
     user_data = {
         "BMI": BMI,
         "Age": Age,
@@ -60,28 +60,56 @@ if st.button("Predict Diabetes Risk"):
         st.error(f"High Diabetes Risk ({probability*100:.1f}%)")
     else:
         st.success(f"Low Diabetes Risk ({probability*100:.1f}%)")
+#health recommendations based on the predction of the risk
+    st.subheader("Health Recommendations")
 
-    prompt = f"""
-    A patient has the following health data:
+    if prediction == 1:
+        st.markdown("""
+### High Diabetes Risk Detected
 
-    BMI: {BMI}
-    Age group: {Age}
-    High Blood Pressure: {HighBP}
-    High Cholesterol: {HighChol}
-    Physical Activity: {PhysActivity}
+Based on your health inputs, you may be at **higher risk for diabetes**.  
+Consider the following preventive steps:
 
-    The ML model predicts a diabetes risk probability of {probability*100:.1f}%.
+**Lifestyle Changes**
+- Maintain a healthy body weight
+- Exercise at least **30 minutes daily**
+- Reduce sugar and refined carbohydrate intake
+- Increase fiber-rich foods (vegetables, whole grains)
 
-    Explain the diabetes risk and provide:
-    1. Lifestyle improvements
-    2. Preventive health advice
-    3. Diet suggestions
-    """
+**Diet Recommendations**
+- Choose whole grains instead of white rice or refined flour
+- Avoid sugary drinks and processed snacks
+- Eat more fruits, vegetables, and lean proteins
 
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=prompt
-    )
+**Health Monitoring**
+- Get **regular blood glucose testing**
+- Monitor blood pressure and cholesterol levels
+- Consult a healthcare professional for proper diagnosis
 
-    st.subheader("AI Health Recommendations")
-    st.write(response.text)
+### Useful Resources
+- https://www.cdc.gov/diabetes/prevention
+- https://www.who.int/news-room/fact-sheets/detail/diabetes
+- https://www.niddk.nih.gov/health-information/diabetes
+""")
+    else:
+        st.markdown("""
+### Low Diabetes Risk
+
+Your current inputs indicate a **lower risk of diabetes**, but maintaining healthy habits is important.
+
+**Healthy Lifestyle Tips**
+- Stay physically active (at least **150 minutes per week**)
+- Maintain a balanced diet
+- Limit processed and high-sugar foods
+- Maintain a healthy weight
+
+**Preventive Measures**
+- Get regular health checkups
+- Monitor blood sugar levels if you have family history
+- Manage stress and sleep well
+
+### Helpful Articles
+- https://www.cdc.gov/diabetes/prevention
+- https://www.healthline.com/nutrition/prevent-diabetes
+- https://diabetes.org/about-diabetes/diabetes-prevention
+""")
